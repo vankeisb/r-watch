@@ -76,6 +76,23 @@ impl BuildConfig {
             } => Err(String::from("TODO Travis")),
         }
     }
+
+    pub fn get_title(&self) -> String {
+        match self {
+            Self::Bamboo {
+                server_url: _,
+                plan,
+                token: _,
+            } => plan.to_string(),
+            Self::CircleCI { org, repo, branch } => format!("{org}/{repo}/{branch}"),
+            Self::Travis {
+                server_url: _,
+                repository,
+                branch,
+                token: _,
+            } => format!("{repository}/{branch}"),
+        }
+    }
 }
 
 #[cfg(test)]
