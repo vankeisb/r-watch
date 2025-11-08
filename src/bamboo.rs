@@ -1,12 +1,5 @@
 use crate::build_status::{BuildStatus, TimeInfo, Status};
-use std::collections::HashMap;
 
-#[derive(Debug)]
-pub struct BambooDef {
-    pub server_url: String,
-    pub plan: String,
-    pub token: Option<String>
-}
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -32,13 +25,13 @@ struct BambooResult {
 }
 
 impl BambooResponse {
-    fn to_build_status(&self, def: &BambooDef) -> Option<BuildStatus> {
+    fn to_build_status(&self, server_url: &String) -> Option<BuildStatus> {
         self.results.result
             .get(0)
             .filter(|result| result.life_cycle_state == "Finished")
             .map(|result| {
                 let status = if result.build_state == "Successful" { Status::Green } else { Status::Red };
-                let server_url = &def.server_url;
+                let server_url = server_url;
                 let build_result_key = &result.build_result_key;
                 let url = format!("{server_url}/browse/{build_result_key}");
                 let time_info = TimeInfo {
@@ -54,48 +47,45 @@ impl BambooResponse {
     }
 }
 
-impl BambooDef {
-    pub async fn fetch(&self) -> Result<BuildStatus, String> {
-        let BambooDef { server_url, plan, token } = self;
-        let url = format!("{server_url}/rest/api/latest/result/{plan}.json?max-results=1&expand=results.result");
-        let client = reqwest::Client::new();
-        let get_part = client.get(url);
-        let req_builder = match token {
-            Some(t) => get_part.header("Authorization", format!("Bearer {t}")),
-            None => get_part
-        };
-        let resp = req_builder
-            .send()
-            .await;
+pub async fn fetch(server_url: &String, plan: &String, token: &Option<String>) -> Result<BuildStatus, String> {
+    let url = format!("{server_url}/rest/api/latest/result/{plan}.json?max-results=1&expand=results.result");
+    let client = reqwest::Client::new();
+    let get_part = client.get(url);
+    let req_builder = match token {
+        Some(t) => get_part.header("Authorization", format!("Bearer {t}")),
+        None => get_part
+    };
+    let resp: Result<reqwest::Response, reqwest::Error> = req_builder
+        .send()
+        .await;
 
-        match resp {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                if status == 200 {
-                    // let j = response.text().await;
-                    match response.json::<BambooResponse>().await {
-                        Ok(response) => {
-                            match response.to_build_status(self) {
-                                Some(build_status) => {
-                                    Ok(build_status)
-                                }
-                                None => {
-                                    Err(String::from("No build found in response"))
-                                }
+    match resp {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            if status == 200 {
+                // let j = response.text().await;
+                match response.json::<BambooResponse>().await {
+                    Ok(response) => {
+                        match response.to_build_status(server_url) {
+                            Some(build_status) => {
+                                Ok(build_status)
+                            }
+                            None => {
+                                Err(String::from("No build found in response"))
                             }
                         }
-                        Err(error) => {
-                            Err(format!("Json parsing error {:?}", error))
-                        }
-                    }                        
-                } else {
-                    Err(format!("Invalid status code {status}"))
-                }
-            },
-            Err(err) => {
-                let msg = format!("{:?}", err);
-                Err(msg)
+                    }
+                    Err(error) => {
+                        Err(format!("Json parsing error {:?}", error))
+                    }
+                }                        
+            } else {
+                Err(format!("Invalid status code {status}"))
             }
+        },
+        Err(err) => {
+            let msg = format!("{:?}", err);
+            Err(msg)
         }
     }
 }
@@ -141,11 +131,6 @@ mod bamboo_tests {
                 )
             }
         };
-        let bamboo_def = BambooDef { 
-            server_url: String::from("http://my.bamboo"), 
-            plan: String::from("YALLA"), 
-            token: None 
-        };
         let expected = BuildStatus {
             status: Status::Red,
             url: String::from("http://my.bamboo/browse/TRUNK-DTRTMP-2203"),
@@ -156,6 +141,7 @@ mod bamboo_tests {
                 }
             )
         };
-        assert_eq!(response.to_build_status(&bamboo_def).unwrap(), expected)        
+        let url = String::from("http://my.bamboo");
+        assert_eq!(response.to_build_status(&url).unwrap(), expected);
     }
 }
