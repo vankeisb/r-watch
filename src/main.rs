@@ -5,7 +5,7 @@ mod config;
 use std;
 
 use crate::{
-    build_status::BuildStatus,
+    build_status::{BuildStatus, TimeInfo},
     config::{env_replacer, load_config},
 };
 
@@ -27,13 +27,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok((
                 BuildStatus {
                     status,
-                    time_info: _,
+                    time_info,
                     url,
                 },
                 build_config,
             )) => {
                 let title = build_config.get_title();
-                println!("[{status:?}] {title} {url}");
+                let elapsed: String = match time_info {
+                    Some(TimeInfo {
+                        completed_at,
+                        duration_secs,
+                    }) => {
+                        let parsed_date = chrono::DateTime::parse_from_rfc3339(completed_at)
+                            .map(|parsed_date| parsed_date.format("%Y-%m-%d %H:%M:%S").to_string())
+                            .ok()
+                            .unwrap_or(completed_at.to_string());
+                        let secs: u64 = u64::try_from(*duration_secs).unwrap();
+                        let d = std::time::Duration::from_secs(secs);
+                        let pretty = pretty_duration::pretty_duration(&d, None);
+                        format!("{} | {}", parsed_date, pretty)
+                    }
+                    None => String::from(""),
+                };
+                let status = match status {
+                    build_status::Status::Green => '🟩',
+                    build_status::Status::Red => '🟥',
+                };
+                println!("{status} {title} | {url} | {elapsed}");
             }
             Err(e) => {
                 println!("Error: {}", e);
