@@ -1,5 +1,6 @@
 mod bamboo;
 mod build_status;
+mod circle_ci;
 mod config;
 
 use std;
@@ -45,13 +46,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let secs: u64 = u64::try_from(*duration_secs).unwrap();
                         let d = std::time::Duration::from_secs(secs);
                         let pretty = pretty_duration::pretty_duration(&d, None);
-                        format!("{} | {}", parsed_date, pretty)
+                        format!("📅 {} | 🕑 {}", parsed_date, pretty)
                     }
-                    None => String::from(""),
+                    None => String::from("📅 N/A | 🕑 N/A"),
                 };
                 let status = match status {
-                    build_status::Status::Green => '🟩',
-                    build_status::Status::Red => '🟥',
+                    build_status::Status::Green => '✅',
+                    build_status::Status::Red => '❌',
                 };
                 println!("{status} {title} | {url} | {elapsed}");
             }

@@ -1,4 +1,4 @@
-use crate::{bamboo, build_status::BuildStatus};
+use crate::{bamboo, build_status::BuildStatus, circle_ci};
 use regex::Regex;
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
@@ -50,6 +50,7 @@ pub enum BuildConfig {
         org: String,
         repo: String,
         branch: String,
+        token: Option<String>,
     },
     Travis {
         server_url: String,
@@ -67,7 +68,12 @@ impl BuildConfig {
                 plan,
                 token,
             } => bamboo::fetch(server_url, plan, token).await,
-            Self::CircleCI { org, repo, branch } => Err(String::from("TODO Circle")),
+            Self::CircleCI {
+                org,
+                repo,
+                branch,
+                token,
+            } => circle_ci::fetch(org, repo, branch, token).await,
             Self::Travis {
                 server_url,
                 repository,
@@ -84,7 +90,12 @@ impl BuildConfig {
                 plan,
                 token: _,
             } => plan.to_string(),
-            Self::CircleCI { org, repo, branch } => format!("{org}/{repo}/{branch}"),
+            Self::CircleCI {
+                org,
+                repo,
+                branch,
+                token: _,
+            } => format!("{org}/{repo}/{branch}"),
             Self::Travis {
                 server_url: _,
                 repository,
@@ -116,6 +127,7 @@ mod config_tests {
                     org: String::from("vankeisb"),
                     repo: String::from("react-tea-cup"),
                     branch: String::from("master"),
+                    token: None,
                 },
                 BuildConfig::Travis {
                     server_url: String::from("https://my.travis"),
@@ -163,6 +175,7 @@ mod config_tests {
                     org: String::from("vankeisb"),
                     repo: String::from("react-tea-cup"),
                     branch: String::from("master"),
+                    token: None,
                 },
                 BuildConfig::Travis {
                     server_url: String::from("https://my.travis"),
