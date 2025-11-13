@@ -51,8 +51,6 @@ impl BambooResponse {
     }
 }
 
-static AUTH_HEADER: &str = "Authorization";
-
 pub async fn fetch(
     server_url: &String,
     plan: &String,
@@ -64,7 +62,7 @@ pub async fn fetch(
 
     let headers = match token {
         Some(token) => {
-            vec!((String::from(AUTH_HEADER), format!("Bearer {token}")))
+            vec!((String::from("Authorization"), format!("Bearer {token}")))
         }
         None => Vec::new(),
     };
