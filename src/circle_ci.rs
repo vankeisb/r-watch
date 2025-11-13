@@ -7,15 +7,6 @@ struct CircleCIResponse {
     items: Vec<CircleCIItem>,
 }
 
-impl CircleCIResponse {
-    fn first_item(&self) -> Result<&CircleCIItem,String> {
-        match self.items.get(0) {
-            Some(item) => Ok(item),
-            None => Err(String::from("No item found in response"))
-        }
-    }
-}
-
 #[derive(Debug, serde::Deserialize, PartialEq)]
 struct CircleCIItem {
     id: String,
@@ -24,15 +15,6 @@ struct CircleCIItem {
 #[derive(Debug, serde::Deserialize, PartialEq)]
 struct WorkflowResponse {
     items: Vec<WorkflowItem>,
-}
-
-impl WorkflowResponse {
-    fn first_item(&self) -> Result<&WorkflowItem,String> {
-        match self.items.get(0) {
-            Some(item) => Ok(item),
-            None => Err(String::from("No workflow item found in response"))
-        }
-    }
 }
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
@@ -83,24 +65,24 @@ pub async fn fetch(
         headers.push((String::from("Circle-Token"), t.to_string()));
     }
 
-    match crate::utils::request::<CircleCIResponse>(&pipeline_url, &headers).await {
-        Ok(response) => match response.items.get(0) {
-            Some(item) => {
-                let pipeline_id = &item.id;
-                let workflow_url = format!("{BASE_URL}/pipeline/{pipeline_id}/workflow");
-                crate::utils::request::<WorkflowResponse>(&workflow_url, &headers)
-                    .await
-                    .and_then(|r| {
-                        match r.first_item() {
-                            Ok(item) => {
-                                item.to_build_status(org, repo)
-                            },
-                            Err(e) => Err(e)
-                        }
-                    })                
+    crate::utils::request::<CircleCIResponse>(&pipeline_url, &headers)
+        .await
+        .and_then(|r| match r.items.into_iter().next() {
+            Some(item) => Ok(item),
+            None => Err(String::from("No CI item found"))
+        })
+        .and_then( |item| futures::executor::block_on(async { 
+            let pipeline_id = &item.id;
+            let workflow_url = format!("{BASE_URL}/pipeline/{pipeline_id}/workflow");
+            crate::utils::request::<WorkflowResponse>(&workflow_url, &headers)
+                .await
+        }))
+        .and_then(|r| {
+            let x = r.items.into_iter().next();
+            match x {
+                Some(item) => Ok(item),
+                None => Err(String::from("No workflow item found"))
             }
-            None => Err(String::from("No items in response")),
-        },
-        Err(e) => Err(e),
-    }    
+        })
+        .and_then(|workflow_item| workflow_item.to_build_status(org, repo))        
 }
