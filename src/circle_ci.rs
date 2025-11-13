@@ -76,8 +76,7 @@ pub async fn fetch(
         headers.push((String::from("Circle-Token"), t.to_string()));
     }
 
-    let response = crate::utils::request::<CircleCIResponse>(&pipeline_url, &headers).await;
-    match response {
+    match crate::utils::request::<CircleCIResponse>(&pipeline_url, &headers).await {
         Ok(response) => match response.items.get(0) {
             Some(item) => {
                 let pipeline_id = &item.id;
