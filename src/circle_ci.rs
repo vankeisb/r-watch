@@ -7,6 +7,15 @@ struct CircleCIResponse {
     items: Vec<CircleCIItem>,
 }
 
+impl CircleCIResponse {
+    fn first_item(&self) -> Result<&CircleCIItem,String> {
+        match self.items.get(0) {
+            Some(item) => Ok(item),
+            None => Err(String::from("No item found in response"))
+        }
+    }
+}
+
 #[derive(Debug, serde::Deserialize, PartialEq)]
 struct CircleCIItem {
     id: String,
@@ -20,10 +29,8 @@ struct WorkflowResponse {
 impl WorkflowResponse {
     fn first_item(&self) -> Result<&WorkflowItem,String> {
         match self.items.get(0) {
-            Some(item) => {                
-                Ok(item)
-            },
-            None => Err(String::from("No item found in response"))
+            Some(item) => Ok(item),
+            None => Err(String::from("No workflow item found in response"))
         }
     }
 }
