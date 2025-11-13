@@ -75,10 +75,10 @@ impl BuildConfig {
                 token,
             } => circle_ci::fetch(org, repo, branch, token).await,
             Self::Travis {
-                server_url,
-                repository,
-                branch,
-                token,
+                server_url: _,
+                repository: _,
+                branch: _,
+                token: _,
             } => Err(String::from("TODO Travis")),
         }
     }

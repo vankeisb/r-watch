@@ -51,6 +51,8 @@ impl BambooResponse {
     }
 }
 
+static AUTH_HEADER: &str = "Authorization";
+
 pub async fn fetch(
     server_url: &String,
     plan: &String,
@@ -59,34 +61,19 @@ pub async fn fetch(
     let url = format!(
         "{server_url}/rest/api/latest/result/{plan}.json?max-results=1&expand=results.result"
     );
-    let client = reqwest::Client::new();
-    let get_part = client.get(url);
-    let req_builder = match token {
-        Some(t) => get_part.header("Authorization", format!("Bearer {t}")),
-        None => get_part,
-    };
-    let resp: Result<reqwest::Response, reqwest::Error> = req_builder.send().await;
 
-    match resp {
-        Ok(response) => {
-            let status = response.status().as_u16();
-            if status == 200 {
-                match response.json::<BambooResponse>().await {
-                    Ok(response) => match response.to_build_status(server_url) {
-                        Some(build_status) => Ok(build_status),
-                        None => Err(String::from("No build found in response")),
-                    },
-                    Err(error) => Err(format!("Json parsing error {:?}", error)),
-                }
-            } else {
-                Err(format!("Invalid status code {status}"))
-            }
+    let headers = match token {
+        Some(token) => {
+            vec!((String::from(AUTH_HEADER), format!("Bearer {token}")))
         }
-        Err(err) => {
-            let msg = format!("{:?}", err);
-            Err(msg)
-        }
-    }
+        None => Vec::new(),
+    };
+
+    let resp = crate::utils::request::<BambooResponse>(&url, &headers).await;
+    resp.and_then(|r| match r.to_build_status(server_url) {
+        Some(build_status) => Ok(build_status),
+        None => Err(String::from("No build found in response")),
+    })
 }
 
 #[cfg(test)]

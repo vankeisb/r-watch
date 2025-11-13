@@ -2,6 +2,7 @@ mod bamboo;
 mod build_status;
 mod circle_ci;
 mod config;
+mod utils;
 
 use std;
 
