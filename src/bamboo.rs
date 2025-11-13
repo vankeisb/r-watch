@@ -67,11 +67,12 @@ pub async fn fetch(
         None => Vec::new(),
     };
 
-    let resp = crate::utils::request::<BambooResponse>(&url, &headers).await;
-    resp.and_then(|r| match r.to_build_status(server_url) {
-        Some(build_status) => Ok(build_status),
-        None => Err(String::from("No build found in response")),
-    })
+    crate::utils::request::<BambooResponse>(&url, &headers)
+        .await
+        .and_then(|r| match r.to_build_status(server_url) {
+            Some(build_status) => Ok(build_status),
+            None => Err(String::from("No build found in response")),
+        })
 }
 
 #[cfg(test)]
