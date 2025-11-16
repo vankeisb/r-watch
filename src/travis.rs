@@ -1,8 +1,8 @@
-use crate::build_status::{BuildStatus, Status};
+use crate::build_status::{BuildStatus, Status, TimeInfo};
 
 fn api_url(server_url: &str) -> String {
     // console.log("serverUrl", serverUrl);
-    if (server_url == "https://travis-ci.org") {
+    if server_url == "https://travis-ci.org" {
         return String::from("https://api.travis-ci.org");
     }
     return format!("{server_url}/api");
@@ -19,6 +19,8 @@ struct TravisBuild {
     state: String,
     id: u32,
     previous_state: String,
+    finished_at: String,
+    duration: u32,
 }
 
 fn encode_uri_component(s: &str) -> String {
@@ -46,10 +48,6 @@ pub async fn fetch(
     if let Some(t) = token {
         headers.push((String::from("Authorization"), format!("token {t}")));
     }
-
-    println!("url: {}", url);
-    println!("headers : {:?}", headers);
-
     crate::utils::request::<TravisResponse>(&url, &headers)
         .await
         .and_then(|response| match response.last_build {
@@ -57,22 +55,28 @@ pub async fn fetch(
                 id,
                 state,
                 previous_state,
+                finished_at,
+                duration,
             }) => {
                 let url = format!("{server_url}/{repository}/builds/{id}");
                 let mut state = state.as_str();
                 if state == "started" || state == "created" {
                     state = &previous_state;
                 }
+                let time_info = Some(TimeInfo {
+                    completed_at: finished_at,
+                    duration_secs: duration,
+                });
                 match state {
                     "passed" => Ok(BuildStatus {
                         status: Status::Green,
                         url,
-                        time_info: None,
+                        time_info,
                     }),
                     "failed" | "errored" => Ok(BuildStatus {
                         status: Status::Red,
                         url,
-                        time_info: None,
+                        time_info,
                     }),
                     _ => Err(format!("unhandled state : {state}")),
                 }

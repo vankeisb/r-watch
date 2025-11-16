@@ -2,15 +2,16 @@ mod bamboo;
 mod build_status;
 mod circle_ci;
 mod config;
-mod utils;
 mod rendering;
 mod travis;
+mod utils;
 
 use std;
 
 use crate::{
-    build_status::{BuildStatus},
-    config::{BuildConfig, env_replacer, load_config}, rendering::render_rows,
+    build_status::BuildStatus,
+    config::{BuildConfig, env_replacer, load_config},
+    rendering::render_rows,
 };
 
 static CONFIG_FILE: &str = ".bwatch.json";
@@ -24,21 +25,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let futures = config
         .builds
         .into_iter()
-        .map(async |x| x.fetch().await.map(|r| (r, x)));
+        .map(async |x| match x.fetch().await {
+            Ok(r) => Ok((r, x)),
+            Err(e) => Err((e, x)),
+        });
     let joined = futures::future::join_all(futures).await;
-
-    let mut rows: Vec<(&BuildConfig, &BuildStatus)> = Vec::new();    
+    let mut rows: Vec<(&BuildConfig, &BuildStatus)> = Vec::new();
     for r in joined.iter() {
         match r {
             Ok((status, config)) => {
                 rows.push((config, status));
             }
-            Err(e) => {
-                println!("Error: {}", e);
+            Err((e, config)) => {
+                println!("💣 {} {:?}", config.get_title(), e);
             }
         }
     }
     render_rows(rows);
-
     Ok(())
 }

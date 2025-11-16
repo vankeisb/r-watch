@@ -1,11 +1,16 @@
-use crate::{build_status::{BuildStatus, Status}, config::BuildConfig};
+use terminal_hyperlink::Hyperlink;
+
+use crate::{
+    build_status::{BuildStatus, Status},
+    config::BuildConfig,
+};
 
 pub struct RowData {
     status: char,
     title: String,
     url: String,
     completed_at: String,
-    duration: String
+    duration: String,
 }
 
 const STATUS_GREEN: char = '✅';
@@ -19,7 +24,7 @@ fn status_to_string(status: &Status) -> char {
 }
 
 fn pad_str(s: &str, i: usize) -> String {
-    format!("{:width$}", s, width=i)
+    format!("{:width$}", s, width = i)
 }
 
 pub fn render_rows(rows: Vec<(&BuildConfig, &BuildStatus)>) -> () {
@@ -28,12 +33,14 @@ pub fn render_rows(rows: Vec<(&BuildConfig, &BuildStatus)>) -> () {
     let mut max_url = 0;
     let mut max_completed_at = 0;
     let mut max_duration = 0;
-    
-    for (config,status) in rows.into_iter() {
+
+    for (config, status) in rows.into_iter() {
         max_title = std::cmp::max(max_title, config.get_title().len());
         max_url = std::cmp::max(max_url, status.url.len());
 
-        let (completed_at, duration) = status.time_info.as_ref()
+        let (completed_at, duration) = status
+            .time_info
+            .as_ref()
             .map(|time_info| {
                 let parsed_date = chrono::DateTime::parse_from_rfc3339(&time_info.completed_at)
                     .map(|parsed_date| parsed_date.format("%Y-%m-%d %H:%M:%S").to_string())
@@ -44,7 +51,7 @@ pub fn render_rows(rows: Vec<(&BuildConfig, &BuildStatus)>) -> () {
                 let pretty = pretty_duration::pretty_duration(&d, None);
                 (parsed_date, pretty)
             })
-            .unwrap_or((String::new(), String::new()));            
+            .unwrap_or((String::new(), String::new()));
 
         max_completed_at = std::cmp::max(max_completed_at, completed_at.len());
         max_duration = std::cmp::max(max_duration, duration.len());
@@ -62,12 +69,10 @@ pub fn render_rows(rows: Vec<(&BuildConfig, &BuildStatus)>) -> () {
     for row in res.into_iter() {
         let status = row.status;
         let title = pad_str(&row.title, max_title);
-        let url = pad_str(&row.url, max_url);
+        let clickable_title = title.hyperlink(&row.url);
         let completed_at = pad_str(&row.completed_at, max_completed_at);
         let duration = pad_str(&row.duration, max_duration);
-        let row = format!(            
-            "{status} {title} | {url} | {completed_at} | {duration}"
-        );
+        let row = format!("{status} {clickable_title} | {completed_at} | {duration}");
         println!("{row}");
     }
 
