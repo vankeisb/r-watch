@@ -1,4 +1,4 @@
-use crate::{bamboo, build_status::BuildStatus, circle_ci};
+use crate::{bamboo, build_status::BuildStatus, circle_ci, travis};
 use regex::Regex;
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
@@ -75,11 +75,11 @@ impl BuildConfig {
                 token,
             } => circle_ci::fetch(org, repo, branch, token).await,
             Self::Travis {
-                server_url: _,
-                repository: _,
-                branch: _,
-                token: _,
-            } => Err(String::from("TODO Travis")),
+                server_url,
+                repository,
+                branch,
+                token,
+            } => travis::fetch(server_url, repository, branch, token).await,
         }
     }
 

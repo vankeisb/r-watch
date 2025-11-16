@@ -4,6 +4,7 @@ mod circle_ci;
 mod config;
 mod utils;
 mod rendering;
+mod travis;
 
 use std;
 

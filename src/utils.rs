@@ -3,7 +3,7 @@ async fn send_request(
     headers: &Vec<(String, String)>,
 ) -> Result<reqwest::Response, reqwest::Error> {
     let client = reqwest::Client::new();
-    let mut builder = client.get(url);    
+    let mut builder = client.get(url);
     for (key, value) in headers {
         builder = builder.header(key, value);
     }
@@ -31,7 +31,7 @@ async fn resp_to_json<T: serde::de::DeserializeOwned>(
         Ok(response) => response
             .json::<T>()
             .await
-            .map_err(|e| format!("JSON Decode error : {e}")),
+            .map_err(|e| format!("JSON Decode error : {:?}", e)),
         Err(e) => Err(e),
     }
 }
