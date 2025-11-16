@@ -1,3 +1,4 @@
+use pad::PadStr;
 use terminal_hyperlink::Hyperlink;
 
 use crate::{
@@ -21,10 +22,6 @@ fn status_to_string(status: &Status) -> char {
         Status::Green => STATUS_GREEN,
         Status::Red => STATUS_RED,
     }
-}
-
-fn pad_str(s: &str, i: usize) -> String {
-    format!("{:width$}", s, width = i)
 }
 
 pub fn render_rows(rows: Vec<(&BuildConfig, &BuildStatus)>) -> () {
@@ -68,10 +65,14 @@ pub fn render_rows(rows: Vec<(&BuildConfig, &BuildStatus)>) -> () {
     res.sort_by(|a, b| a.title.cmp(&b.title));
     for row in res.into_iter() {
         let status = row.status;
-        let title = pad_str(&row.title, max_title);
+        let title = &row.title.pad_to_width(max_title);
         let clickable_title = title.hyperlink(&row.url);
-        let completed_at = pad_str(&row.completed_at, max_completed_at);
-        let duration = pad_str(&row.duration, max_duration);
+        let completed_at = &row
+            .completed_at
+            .pad_to_width_with_alignment(max_completed_at, pad::Alignment::Right);
+        let duration = &row
+            .duration
+            .pad_to_width_with_alignment(max_duration, pad::Alignment::Right);
         let row = format!("{status} {clickable_title} | {completed_at} | {duration}");
         println!("{row}");
     }
