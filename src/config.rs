@@ -58,6 +58,13 @@ pub enum BuildConfig {
         branch: String,
         token: Option<String>,
     },
+    Jenkins {
+        server_url: String,
+        plan: String,
+        branch: String,
+        user: Option<String>,
+        token: Option<String>,
+    },
 }
 
 impl BuildConfig {
@@ -80,6 +87,13 @@ impl BuildConfig {
                 branch,
                 token,
             } => travis::fetch(server_url, repository, branch, token).await,
+            Self::Jenkins {
+                server_url,
+                plan,
+                branch,
+                user,
+                token,
+            } => panic!("TODO"),
         }
     }
 
@@ -102,6 +116,13 @@ impl BuildConfig {
                 branch,
                 token: _,
             } => format!("{repository}/{branch}"),
+            Self::Jenkins {
+                server_url: _,
+                plan,
+                branch,
+                user: _,
+                token: _,
+            } => format!("{plan}/{branch}"),
         }
     }
 }
@@ -109,6 +130,24 @@ impl BuildConfig {
 #[cfg(test)]
 mod config_tests {
     use super::*;
+
+    #[test]
+    fn decode_jenkins() {
+        let config = String::from(
+            "{\"pollingInterval\":60000,\"builds\":[{\"tag\":\"jenkins\",\"serverUrl\":\"https://my.jenkins\",\"user\":\"${process.env.JENKINS_USER}\",\"token\":\"${process.env.JENKINS_TOKEN}\",\"plan\":\"my-plan\",\"branch\":\"main\"}]}",
+        );
+        let config = serde_json::from_str::<Config>(&config).unwrap();
+        let expected = Config {
+            builds: vec![BuildConfig::Jenkins {
+                server_url: String::from("https://my.jenkins"),
+                plan: String::from("my-plan"),
+                branch: String::from("main"),
+                user: Some(String::from("${process.env.JENKINS_USER}")),
+                token: Some(String::from("${process.env.JENKINS_TOKEN}")),
+            }],
+        };
+        assert_eq!(config, expected)
+    }
 
     #[test]
     fn decode_config() {
