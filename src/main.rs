@@ -7,18 +7,26 @@ mod rendering;
 mod travis;
 mod utils;
 
-use std;
-
 use crate::{
     build_status::BuildStatus,
     config::{BuildConfig, env_replacer, load_config},
     rendering::render_rows,
 };
+use clap::Parser;
+use std;
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    #[arg(short, long)]
+    filter: Option<String>,
+}
 
 static CONFIG_FILE: &str = ".bwatch.json";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
     let mut config_file = std::env::home_dir().unwrap();
     config_file.push(CONFIG_FILE);
     let content = std::fs::read_to_string(config_file).unwrap();
@@ -26,6 +34,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let futures = config
         .builds
         .into_iter()
+        .filter(|build| match &cli.filter {
+            Some(filter) => build.get_title().contains(filter),
+            None => true,
+        })
         .map(async |x| match x.fetch().await {
             Ok(r) => Ok((r, x)),
             Err(e) => Err((e, x)),

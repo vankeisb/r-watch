@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 chrono = "0.4.42"
+clap = { version = "4.5.51", features = ["derive"] }
 futures = "0.3.31"
 pad = "0.1.6"
 pretty-duration = "0.1.1"
