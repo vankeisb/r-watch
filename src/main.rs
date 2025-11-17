@@ -2,6 +2,7 @@ mod bamboo;
 mod build_status;
 mod circle_ci;
 mod config;
+mod jenkins;
 mod rendering;
 mod travis;
 mod utils;

@@ -1,4 +1,4 @@
-use crate::{bamboo, build_status::BuildStatus, circle_ci, travis};
+use crate::{bamboo, build_status::BuildStatus, circle_ci, jenkins, travis};
 use regex::Regex;
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
@@ -93,7 +93,7 @@ impl BuildConfig {
                 branch,
                 user,
                 token,
-            } => panic!("TODO"),
+            } => jenkins::fetch(server_url, plan, branch, token, user).await,
         }
     }
 
