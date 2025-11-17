@@ -62,7 +62,7 @@ pub async fn fetch(
 
     let headers = match token {
         Some(token) => {
-            vec!((String::from("Authorization"), format!("Bearer {token}")))
+            vec![(String::from("Authorization"), format!("Bearer {token}"))]
         }
         None => Vec::new(),
     };
