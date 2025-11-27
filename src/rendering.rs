@@ -45,7 +45,6 @@ fn status_to_string(status: &Status) -> char {
 
 #[derive(Debug)]
 struct GroupData {
-    total: u32,
     nb_green: u32,
     nb_red: u32,
     nb_err: u32,
@@ -53,15 +52,15 @@ struct GroupData {
 
 pub fn render_groups(rows: Vec<(BuildConfig, Result<BuildStatus,String>)>) -> () {
     let mut by_tags: HashMap<String, GroupData> = HashMap::new();
+    let mut max_group = 0;
     for row in rows.into_iter() {
         for group in row.0.get_groups() {
+            max_group = std::cmp::max(group.len(), max_group);
             let data = by_tags.entry(group).or_insert(GroupData {
-                total: 0,
                 nb_green: 0,
                 nb_red: 0,
                 nb_err: 0,
             });
-            data.total = data.total + 1;
             match &row.1 {
                 Ok(x) => {
                     match x.status {
@@ -84,15 +83,24 @@ pub fn render_groups(rows: Vec<(BuildConfig, Result<BuildStatus,String>)>) -> ()
     sorted_keys.sort();
     for key in sorted_keys.iter() {
         let data = by_tags.get(*key);
+        let key = key.pad_to_width(max_group);
         match data {
             Some(data) => {
-                println!("{} : Total : {}, Green: {}, Red: {}, Err: {}", key, data.total, data.nb_green, data.nb_red, data.nb_err);
+                let nb_green = pad_num(data.nb_green);
+                let nb_red = pad_num(data.nb_red);
+                let nb_err = pad_num(data.nb_err);
+                println!("{key} | {nb_green} {STATUS_GREEN} | {nb_red} {STATUS_RED} | {nb_err} {STATUS_ERR}");
             },
             None => {
-                println!("{} : no data", key);
+                println!("{key} | {STATUS_ERR} no data");
             }
         }
     }
+}
+
+pub fn pad_num(n: u32) -> String {
+    let s = format!("{n}");
+    s.pad_to_width_with_alignment(3, pad::Alignment::Right)
 }
 
 pub fn render_rows(rows: Vec<(BuildConfig, Result<BuildStatus,String>)>) -> () {
