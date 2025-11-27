@@ -13,13 +13,16 @@ use crate::{
     rendering::render_rows,
 };
 use clap::Parser;
-use std;
+use std::{self, collections::HashMap};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
     #[arg(short, long)]
     filter: Option<String>,
+
+    #[arg(long)]
+    tags: bool,
 }
 
 static CONFIG_FILE: &str = ".bwatch.json";
@@ -31,29 +34,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     config_file.push(CONFIG_FILE);
     let content = std::fs::read_to_string(config_file).unwrap();
     let config = load_config(&content, env_replacer).unwrap();
-    let futures = config
+    let configs = config
         .builds
         .into_iter()
         .filter(|build| match &cli.filter {
             Some(filter) => build.get_title().contains(filter),
             None => true,
-        })
-        .map(async |x| match x.fetch().await {
-            Ok(r) => Ok((r, x)),
-            Err(e) => Err((e, x)),
         });
+
+    let futures = configs
+        .map(async |x| 
+            match x.fetch().await {
+                Ok(r) => (x, Ok(r)),
+                Err(e) => (x, Err(e))
+            }
+        );
     let joined = futures::future::join_all(futures).await;
-    let mut rows: Vec<(&BuildConfig, &BuildStatus)> = Vec::new();
-    for r in joined.iter() {
-        match r {
-            Ok((status, config)) => {
-                rows.push((config, status));
-            }
-            Err((e, config)) => {
-                println!("💣 {} {:?}", config.get_title(), e);
-            }
+
+    // let futures = config
+    //     .builds
+    //     .into_iter()
+    //     .filter(|build| match &cli.filter {
+    //         Some(filter) => build.get_title().contains(filter),
+    //         None => true,
+    //     })
+    //     .map(async |x| match x.fetch().await {
+    //         Ok(r) => Ok((r, x)),
+    //         Err(e) => Err((e, x)),
+    //     });
+    // let joined = futures::future::join_all(futures).await;
+    if cli.tags {
+        // let by_tags: HashMap<&String, Result<(BuildStatus, BuildConfig),String>> = HashMap::new();
+        // for r in joined.iter() {
+            
+        // }
+        println!("TODO tags");
+    } else {
+        let mut rows:Vec<(BuildConfig, Result<BuildStatus,String>)> = Vec::new();
+        for r in joined.into_iter() {
+            rows.push(r);            
         }
+        render_rows(rows);
     }
-    render_rows(rows);
     Ok(())
 }
+
+// fn mk_filter(filter: Option<String>) -> for<'a> fn(&'a BuildConfig) -> bool {
+//     match filter {
+//         Some(filter) => |build| build.get_title().contains(filter),
+//         None => |build_| true,
+//     }
+// }

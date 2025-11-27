@@ -45,18 +45,21 @@ pub enum BuildConfig {
         server_url: String,
         plan: String,
         token: Option<String>,
+        groups: Option<Vec<String>>,
     },
     CircleCI {
         org: String,
         repo: String,
         branch: String,
         token: Option<String>,
+        groups: Option<Vec<String>>,
     },
     Travis {
         server_url: String,
         repository: String,
         branch: String,
         token: Option<String>,
+        groups: Option<Vec<String>>,
     },
     Jenkins {
         server_url: String,
@@ -64,6 +67,7 @@ pub enum BuildConfig {
         branch: String,
         user: Option<String>,
         token: Option<String>,
+        groups: Option<Vec<String>>,
     },
 }
 
@@ -74,18 +78,21 @@ impl BuildConfig {
                 server_url,
                 plan,
                 token,
+                groups: _,
             } => bamboo::fetch(server_url, plan, token).await,
             Self::CircleCI {
                 org,
                 repo,
                 branch,
                 token,
+                groups: _,
             } => circle_ci::fetch(org, repo, branch, token).await,
             Self::Travis {
                 server_url,
                 repository,
                 branch,
                 token,
+                groups: _,
             } => travis::fetch(server_url, repository, branch, token).await,
             Self::Jenkins {
                 server_url,
@@ -93,6 +100,7 @@ impl BuildConfig {
                 branch,
                 user,
                 token,
+                groups: _,
             } => jenkins::fetch(server_url, plan, branch, token, user).await,
         }
     }
@@ -103,18 +111,21 @@ impl BuildConfig {
                 server_url: _,
                 plan,
                 token: _,
+                groups: _,
             } => plan.to_string(),
             Self::CircleCI {
                 org,
                 repo,
                 branch,
                 token: _,
+                groups: _,
             } => format!("{org}/{repo}/{branch}"),
             Self::Travis {
                 server_url: _,
                 repository,
                 branch,
                 token: _,
+                groups: _,
             } => format!("{repository}/{branch}"),
             Self::Jenkins {
                 server_url: _,
@@ -122,7 +133,41 @@ impl BuildConfig {
                 branch,
                 user: _,
                 token: _,
+                groups: _,
             } => format!("{plan}/{branch}"),
+        }
+    }
+
+    pub fn get_groups(&self) -> &Option<Vec<String>> {
+        match self {
+            Self::Bamboo {
+                server_url: _,
+                plan: _,
+                token: _,
+                groups,
+            } => groups,
+            Self::CircleCI {
+                org: _,
+                repo: _,
+                branch: _,
+                token: _,
+                groups,
+            } => groups,
+            Self::Travis {
+                server_url: _,
+                repository: _,
+                branch: _,
+                token: _,
+                groups,
+            } => groups,
+            Self::Jenkins {
+                server_url: _,
+                plan: _,
+                branch: _,
+                user: _,
+                token: _,
+                groups,
+            } => groups,
         }
     }
 }
@@ -144,6 +189,7 @@ mod config_tests {
                 branch: String::from("main"),
                 user: Some(String::from("${process.env.JENKINS_USER}")),
                 token: Some(String::from("${process.env.JENKINS_TOKEN}")),
+                groups: None,
             }],
         };
         assert_eq!(config, expected)
@@ -161,18 +207,21 @@ mod config_tests {
                     server_url: String::from("http://my.bamboo"),
                     plan: String::from("MY-PLAN"),
                     token: Some(String::from("${process.env.BAMBOO_TOKEN}")),
+                    groups: None,
                 },
                 BuildConfig::CircleCI {
                     org: String::from("vankeisb"),
                     repo: String::from("react-tea-cup"),
                     branch: String::from("master"),
                     token: None,
+                    groups: None,
                 },
                 BuildConfig::Travis {
                     server_url: String::from("https://my.travis"),
                     repository: String::from("my/repo"),
                     branch: String::from("develop"),
                     token: Some(String::from("${process.env.TRAVIS_TOKEN}")),
+                    groups: None,
                 },
             ],
         };
@@ -209,18 +258,21 @@ mod config_tests {
                     server_url: String::from("http://my.bamboo"),
                     plan: String::from("MY-PLAN"),
                     token: Some(String::from("btoken")),
+                    groups: None,
                 },
                 BuildConfig::CircleCI {
                     org: String::from("vankeisb"),
                     repo: String::from("react-tea-cup"),
                     branch: String::from("master"),
                     token: None,
+                    groups: None,
                 },
                 BuildConfig::Travis {
                     server_url: String::from("https://my.travis"),
                     repository: String::from("my/repo"),
                     branch: String::from("develop"),
                     token: Some(String::from("")),
+                    groups: None,
                 },
             ],
         };
