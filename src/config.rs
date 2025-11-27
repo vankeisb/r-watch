@@ -9,7 +9,7 @@ pub struct Config {
 
 const PREFIX_LEN: usize = "${process.env.".len();
 
-fn substitute_variables(s: &String, replacer: fn(&str) -> Option<String>) -> String {
+fn substitute_variables(s: &str, replacer: fn(&str) -> Option<String>) -> String {
     let re = Regex::new(r"\$\{process\.env\.[a-zA-Z_]*\}").unwrap();
     let matches = re.find_iter(s); //.collect::<Vec<_>>();
     let mut res = String::from("");
@@ -33,7 +33,7 @@ pub fn env_replacer(name: &str) -> Option<String> {
     std::env::var(name).ok()
 }
 
-pub fn load_config(s: &String, replacer: fn(&str) -> Option<String>) -> Result<Config, String> {
+pub fn load_config(s: &str, replacer: fn(&str) -> Option<String>) -> Result<Config, String> {
     let sub = substitute_variables(s, replacer);
     serde_json::from_str::<Config>(&sub).map_err(|e| format!("JSON Error {:?}", e))
 }
