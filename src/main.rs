@@ -36,7 +36,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .builds
         .into_iter()
         .filter(|build| match &cli.filter {
-            Some(filter) => build.get_title().contains(filter),
+            Some(filter) => {
+                if build.get_title().contains(filter) {
+                    true
+                } else {
+                    for group in build.get_groups().iter() {
+                        if group.contains(filter) {
+                            return true;
+                        }
+                    }
+                    false
+                }
+            },
             None => true,
         });
 
