@@ -51,9 +51,9 @@ impl WorkflowItem {
 }
 
 pub async fn fetch(
-    org: &String,
-    repo: &String,
-    branch: &String,
+    org: &str,
+    repo: &str,
+    branch: &str,
     token: &Option<String>,
 ) -> Result<BuildStatus, String> {
     let pipeline_url = format!("{BASE_URL}/project/github/{org}/{repo}/pipeline?branch={branch}");

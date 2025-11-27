@@ -24,7 +24,7 @@ struct BambooResult {
 }
 
 impl BambooResponse {
-    fn to_build_status(&self, server_url: &String) -> Option<BuildStatus> {
+    fn to_build_status(&self, server_url: &str) -> Option<BuildStatus> {
         self.results
             .result
             .get(0)
@@ -52,8 +52,8 @@ impl BambooResponse {
 }
 
 pub async fn fetch(
-    server_url: &String,
-    plan: &String,
+    server_url: &str,
+    plan: &str,
     token: &Option<String>,
 ) -> Result<BuildStatus, String> {
     let url = format!(

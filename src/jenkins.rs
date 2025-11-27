@@ -1,9 +1,9 @@
 use crate::build_status::{BuildStatus, Status};
 
 pub async fn fetch(
-    server_url: &String,
-    plan: &String,
-    branch: &String,
+    server_url: &str,
+    plan: &str,
+    branch: &str,
     token: &Option<String>,
     user: &Option<String>,
 ) -> Result<BuildStatus, String> {
