@@ -71,6 +71,13 @@ pub enum BuildConfig {
     },
 }
 
+fn opt_to_vec(opt: &Option<Vec<String>>) -> Vec<String> {
+    match opt {
+        Some(strs) => strs.clone(),
+        None => vec!(),
+    }
+}
+
 impl BuildConfig {
     pub async fn fetch(&self) -> Result<BuildStatus, String> {
         match self {
@@ -138,28 +145,61 @@ impl BuildConfig {
         }
     }
 
-    pub fn get_groups(&self) -> &Option<Vec<String>> {
+    pub fn get_url(&self) -> String {
+        match self {
+            Self::Bamboo {
+                server_url,
+                plan,
+                token: _,
+                groups: _,
+            } => format!("{server_url}/browse/{plan}"),
+            Self::CircleCI {
+                org,
+                repo,
+                branch,
+                token: _,
+                groups: _,
+            } => format!("https://app.circleci.com/pipelines/github/{org}/{repo}?branch={branch}"),
+            Self::Travis {
+                server_url: _,
+                repository: _,
+                branch: _,
+                token: _,
+                groups: _,
+            } => String::from(""),
+            Self::Jenkins {
+                server_url,
+                plan,
+                branch,
+                user: _,
+                token: _,
+                groups: _,
+            } => format!("{server_url}/blue/organizations/jenkins/{plan}/activity?branch={branch}"),
+        }
+    }
+
+    pub fn get_groups(&self) -> Vec<String> {
         match self {
             Self::Bamboo {
                 server_url: _,
                 plan: _,
                 token: _,
                 groups,
-            } => groups,
+            } => opt_to_vec(groups),
             Self::CircleCI {
                 org: _,
                 repo: _,
                 branch: _,
                 token: _,
                 groups,
-            } => groups,
+            } => opt_to_vec(groups),
             Self::Travis {
                 server_url: _,
                 repository: _,
                 branch: _,
                 token: _,
                 groups,
-            } => groups,
+            } => opt_to_vec(groups),
             Self::Jenkins {
                 server_url: _,
                 plan: _,
@@ -167,7 +207,7 @@ impl BuildConfig {
                 user: _,
                 token: _,
                 groups,
-            } => groups,
+            } => opt_to_vec(groups),
         }
     }
 }

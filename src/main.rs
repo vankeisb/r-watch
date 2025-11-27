@@ -8,12 +8,10 @@ mod travis;
 mod utils;
 
 use crate::{
-    build_status::BuildStatus,
-    config::{BuildConfig, env_replacer, load_config},
-    rendering::render_rows,
+    config::{env_replacer, load_config},
+    rendering::{render_groups, render_rows},
 };
 use clap::Parser;
-use std::{self, collections::HashMap};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -22,7 +20,7 @@ struct Cli {
     filter: Option<String>,
 
     #[arg(long)]
-    tags: bool,
+    groups: bool,    
 }
 
 static CONFIG_FILE: &str = ".bwatch.json";
@@ -51,37 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     let joined = futures::future::join_all(futures).await;
 
-    // let futures = config
-    //     .builds
-    //     .into_iter()
-    //     .filter(|build| match &cli.filter {
-    //         Some(filter) => build.get_title().contains(filter),
-    //         None => true,
-    //     })
-    //     .map(async |x| match x.fetch().await {
-    //         Ok(r) => Ok((r, x)),
-    //         Err(e) => Err((e, x)),
-    //     });
-    // let joined = futures::future::join_all(futures).await;
-    if cli.tags {
-        // let by_tags: HashMap<&String, Result<(BuildStatus, BuildConfig),String>> = HashMap::new();
-        // for r in joined.iter() {
-            
-        // }
-        println!("TODO tags");
+    if cli.groups {
+        render_groups(joined);
     } else {
-        let mut rows:Vec<(BuildConfig, Result<BuildStatus,String>)> = Vec::new();
-        for r in joined.into_iter() {
-            rows.push(r);            
-        }
-        render_rows(rows);
+        render_rows(joined);
     }
     Ok(())
 }
-
-// fn mk_filter(filter: Option<String>) -> for<'a> fn(&'a BuildConfig) -> bool {
-//     match filter {
-//         Some(filter) => |build| build.get_title().contains(filter),
-//         None => |build_| true,
-//     }
-// }
