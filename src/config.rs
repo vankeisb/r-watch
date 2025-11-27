@@ -1,4 +1,4 @@
-use crate::{bamboo, build_status::BuildStatus, circle_ci, jenkins, travis};
+use crate::{bamboo, build_status::BuildStatus, circle_ci, jenkins, travis, utils::encode_uri_component};
 use regex::Regex;
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
@@ -147,13 +147,20 @@ impl BuildConfig {
                 server_url,
                 plan,
                 ..
-            } => format!("{server_url}/browse/{plan}"),
+            } => {
+                let plan = encode_uri_component(plan);
+                format!("{server_url}/browse/{plan}")
+            },
             Self::CircleCI {
                 org,
                 repo,
                 branch,
                 ..
-            } => format!("https://app.circleci.com/pipelines/github/{org}/{repo}?branch={branch}"),
+            } => {
+                let org = encode_uri_component(org);
+                let repo = encode_uri_component(repo);
+                let branch= encode_uri_component(branch);
+                format!("https://app.circleci.com/pipelines/github/{org}/{repo}?branch={branch}")},
             Self::Travis {
                 ..
             } => String::from(""),
@@ -162,7 +169,11 @@ impl BuildConfig {
                 plan,
                 branch,
                 ..
-            } => format!("{server_url}/blue/organizations/jenkins/{plan}/activity?branch={branch}"),
+            } => { 
+                let plan = encode_uri_component(plan);
+                let branch = encode_uri_component(branch);
+                format!("{server_url}/blue/organizations/jenkins/{plan}/activity?branch={branch}") 
+            },
         }
     }
 

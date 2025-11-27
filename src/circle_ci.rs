@@ -1,4 +1,4 @@
-use crate::build_status::BuildStatus;
+use crate::{build_status::BuildStatus, utils::encode_uri_component};
 
 static BASE_URL: &str = "https://circleci.com/api/v2";
 
@@ -56,6 +56,7 @@ pub async fn fetch(
     branch: &str,
     token: &Option<String>,
 ) -> Result<BuildStatus, String> {
+    let branch = encode_uri_component(branch);
     let pipeline_url = format!("{BASE_URL}/project/github/{org}/{repo}/pipeline?branch={branch}");
     let mut headers = vec![
         (String::from("Accept"), String::from("application/json")),
@@ -72,7 +73,7 @@ pub async fn fetch(
             None => Err(String::from("No CI item found"))
         })
         .and_then( |item| futures::executor::block_on(async { 
-            let pipeline_id = &item.id;
+            let pipeline_id = encode_uri_component(&item.id);
             let workflow_url = format!("{BASE_URL}/pipeline/{pipeline_id}/workflow");
             crate::utils::request::<WorkflowResponse>(&workflow_url, &headers)
                 .await

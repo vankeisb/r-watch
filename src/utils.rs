@@ -72,3 +72,7 @@ pub async fn request_basic<T: serde::de::DeserializeOwned>(
     ))
     .await
 }
+
+pub fn encode_uri_component(s: &str) -> String {
+    s.replace("/", "%2F")
+}

@@ -1,4 +1,4 @@
-use crate::build_status::{BuildStatus, Status, TimeInfo};
+use crate::{build_status::{BuildStatus, Status, TimeInfo}, utils::encode_uri_component};
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -56,6 +56,7 @@ pub async fn fetch(
     plan: &str,
     token: &Option<String>,
 ) -> Result<BuildStatus, String> {
+    let plan = encode_uri_component(plan);
     let url = format!(
         "{server_url}/rest/api/latest/result/{plan}.json?max-results=1&expand=results.result"
     );

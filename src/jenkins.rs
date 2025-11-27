@@ -1,4 +1,4 @@
-use crate::build_status::{BuildStatus, Status};
+use crate::{build_status::{BuildStatus, Status}, utils::encode_uri_component};
 
 pub async fn fetch(
     server_url: &str,
@@ -7,6 +7,8 @@ pub async fn fetch(
     token: &Option<String>,
     user: &Option<String>,
 ) -> Result<BuildStatus, String> {
+    let plan = encode_uri_component(plan);
+    let branch = encode_uri_component(branch);
     let url = format!(
         "{server_url}/job/{plan}/job/{branch}/lastCompletedBuild/api/json?tree=url,building,timestamp,estimatedDuration,result,duration&depth=0"
     );

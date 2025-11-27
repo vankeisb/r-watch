@@ -1,4 +1,4 @@
-use crate::build_status::{BuildStatus, Status, TimeInfo};
+use crate::{build_status::{BuildStatus, Status, TimeInfo}, utils::encode_uri_component};
 
 fn api_url(server_url: &str) -> String {
     // console.log("serverUrl", serverUrl);
@@ -21,10 +21,6 @@ struct TravisBuild {
     previous_state: String,
     finished_at: String,
     duration: u32,
-}
-
-fn encode_uri_component(s: &str) -> String {
-    s.replace("/", "%2F")
 }
 
 pub async fn fetch(
