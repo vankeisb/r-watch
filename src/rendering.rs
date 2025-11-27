@@ -26,8 +26,8 @@ enum Row {
 impl Row {
     fn get_title(&self) -> &String {
         match self {
-            Row::SuccessRow { status: _, title, url: _,  completed_at: _, duration: _} => title,
-            Row::FailureRow { title, error: _, url: _} => title,
+            Row::SuccessRow { title, .. } => title,
+            Row::FailureRow { title, .. } => title,
         }
     }
 } 
