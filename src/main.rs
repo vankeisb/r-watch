@@ -20,7 +20,7 @@ struct Cli {
     filter: Option<String>,
 
     #[arg(long)]
-    groups: bool,    
+    groups: bool,
 }
 
 static CONFIG_FILE: &str = ".bwatch.json";
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
     let futures = configs
-        .map(async |x| 
+        .map(async |x|
             match x.fetch().await {
                 Ok(r) => (x, Ok(r)),
                 Err(e) => (x, Err(e))
