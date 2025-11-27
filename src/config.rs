@@ -85,21 +85,21 @@ impl BuildConfig {
                 server_url,
                 plan,
                 token,
-                groups: _,
+                ..
             } => bamboo::fetch(server_url, plan, token).await,
             Self::CircleCI {
                 org,
                 repo,
                 branch,
                 token,
-                groups: _,
+                ..
             } => circle_ci::fetch(org, repo, branch, token).await,
             Self::Travis {
                 server_url,
                 repository,
                 branch,
                 token,
-                groups: _,
+                ..
             } => travis::fetch(server_url, repository, branch, token).await,
             Self::Jenkins {
                 server_url,
@@ -107,7 +107,7 @@ impl BuildConfig {
                 branch,
                 user,
                 token,
-                groups: _,
+                ..
             } => jenkins::fetch(server_url, plan, branch, token, user).await,
         }
     }
@@ -117,30 +117,26 @@ impl BuildConfig {
             Self::Bamboo {
                 server_url: _,
                 plan,
-                token: _,
-                groups: _,
+                ..
             } => plan.to_string(),
             Self::CircleCI {
                 org,
                 repo,
                 branch,
-                token: _,
-                groups: _,
+                ..
             } => format!("{org}/{repo}/{branch}"),
             Self::Travis {
                 server_url: _,
                 repository,
                 branch,
-                token: _,
-                groups: _,
+                ..
             } => format!("{repository}/{branch}"),
             Self::Jenkins {
                 server_url: _,
                 plan,
                 branch,
                 user: _,
-                token: _,
-                groups: _,
+                ..
             } => format!("{plan}/{branch}"),
         }
     }
@@ -150,63 +146,43 @@ impl BuildConfig {
             Self::Bamboo {
                 server_url,
                 plan,
-                token: _,
-                groups: _,
+                ..
             } => format!("{server_url}/browse/{plan}"),
             Self::CircleCI {
                 org,
                 repo,
                 branch,
-                token: _,
-                groups: _,
+                ..
             } => format!("https://app.circleci.com/pipelines/github/{org}/{repo}?branch={branch}"),
             Self::Travis {
-                server_url: _,
-                repository: _,
-                branch: _,
-                token: _,
-                groups: _,
+                ..
             } => String::from(""),
             Self::Jenkins {
                 server_url,
                 plan,
                 branch,
-                user: _,
-                token: _,
-                groups: _,
+                ..
             } => format!("{server_url}/blue/organizations/jenkins/{plan}/activity?branch={branch}"),
         }
     }
 
     pub fn get_groups(&self) -> Vec<String> {
         match self {
-            Self::Bamboo {
-                server_url: _,
-                plan: _,
-                token: _,
+            Self::Bamboo {                
                 groups,
+                ..
             } => opt_to_vec(groups),
             Self::CircleCI {
-                org: _,
-                repo: _,
-                branch: _,
-                token: _,
                 groups,
+                ..
             } => opt_to_vec(groups),
             Self::Travis {
-                server_url: _,
-                repository: _,
-                branch: _,
-                token: _,
                 groups,
+                ..
             } => opt_to_vec(groups),
             Self::Jenkins {
-                server_url: _,
-                plan: _,
-                branch: _,
-                user: _,
-                token: _,
                 groups,
+                ..
             } => opt_to_vec(groups),
         }
     }
