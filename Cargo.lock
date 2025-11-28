@@ -101,6 +101,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46c5e41b57b8bba42a04676d81cb89e9ee8e859a1a66f80a5a72e1cb76b34d43"
 
 [[package]]
+name = "bwatch"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "futures",
+ "pad",
+ "pretty-duration",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "terminal_hyperlink",
+ "tokio",
+]
+
+[[package]]
 name = "bytes"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1088,23 +1105,6 @@ name = "rustversion"
 version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
-
-[[package]]
-name = "rwatch"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "futures",
- "pad",
- "pretty-duration",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "terminal_hyperlink",
- "tokio",
-]
 
 [[package]]
 name = "ryu"
